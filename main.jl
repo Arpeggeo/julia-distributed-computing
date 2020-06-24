@@ -19,6 +19,7 @@ addprocs(4, topology=:master_worker, exeflags="--project=$(Base.active_project()
     csv = CSV.read(infile)
 
     # perform calculations
+    sleep(60) # pretend it takes time
     csv.new = rand(size(csv,1))
 
     # save new file to disk
