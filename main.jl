@@ -5,7 +5,7 @@ addprocs(4, topology=:master_worker, exeflags="--project=$(Base.active_project()
 
 # SETUP FOR ALL PROCESSES
 # -----------------------
-@sync @everywhere begin
+@everywhere begin
   # instantiate environment
   using Pkg; Pkg.instantiate()
 
