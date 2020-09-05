@@ -1,19 +1,14 @@
 using Distributed
 
-# add processes on the same machine
-addprocs(4, topology=:master_worker, exeflags="--project=$(Base.active_project())")
-
-# SETUP FOR ALL PROCESSES
-# -----------------------
+# instantiate environment in all processes
 @everywhere begin
-  # instantiate environment
-  using Pkg; Pkg.instantiate()
+  using Pkg; Pkg.activate(@__DIR__); Pkg.instantiate()
+end
 
-  # load dependencies
+# load dependencies and helper functions
+@everywhere begin
   using CSV
 
-  # HELPER FUNCTIONS
-  # ----------------
   function process(infile, outfile)
     # read file from disk
     csv = CSV.read(infile)
