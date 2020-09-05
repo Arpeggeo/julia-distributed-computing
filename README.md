@@ -158,7 +158,7 @@ Suppose we are in a cluster that uses the PBS job scheduler. We can write a PBS 
 #PBS -N test_julia
 #PBS -q debug
 
-julia --machinefile=$PBS_NODEFILE main.jl
+julia --machinefile=$PBS_NODEFILE --project=. main.jl
 ```
 
 # Contributors
