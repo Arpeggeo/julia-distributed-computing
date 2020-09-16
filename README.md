@@ -9,10 +9,12 @@ The idea here is to update this content every now and then to reflect the latest
 We will consider a sample script that processes a set of files in a data folder and saves the results in a results folder. I like this task because it involves IO and file paths, which can get tricky in remote machines:
 
 ```julia
-# instantiate environment
-using Pkg; Pkg.activate(@__DIR__); Pkg.instantiate()
+# instantiate and precompile environment
+using Pkg; Pkg.activate(@__DIR__)
+Pkg.instantiate(); Pkg.precompile()
 
 # load dependencies
+using ProgressMeter
 using CSV
 
 # helper functions
@@ -32,29 +34,29 @@ end
 # -----------
 
 # relevant directories
-indir  = "data"
-outdir = "results"
+indir  = joinpath(@__DIR__,"data")
+outdir = joinpath(@__DIR__,"results")
 
 # files to process
 infiles  = readdir(indir, join=true)
 outfiles = joinpath.(outdir, basename.(infiles))
 nfiles   = length(infiles)
 
-for i in 1:nfiles
+@showprogress for i in 1:nfiles
   process(infiles[i], outfiles[i])
 end
 ```
 
 We follow Julia’s best practices:
 
-1. We start by instantiating the environment in the host machine, which lives in the files Project.toml and Manifest.toml in the project directory (the same directory of the script).
+1. We instantiate the environment in the host machine, which lives in the files Project.toml and Manifest.toml (the same directory of the script). Additionally, we precompile the project in case of heavy dependencies.
 2. We then load the dependencies of the project, and define helper functions to be used.
 3. The main work is done in a loop that calls the helper function with various files.
 
-Let’s call this script `main.jl`. We can cd into the project directory and call the script as follows (assuming Julia v1.4 or higher):
+Let’s call this script `main.jl`. We can cd into the project directory and call the script as follows:
 
 ```shell
-$ julia --project=. main.jl
+$ julia main.jl
 ```
 
 ## Parallelization (same machine)
@@ -69,13 +71,15 @@ Here is the resulting script after the modifications:
 ```julia
 using Distributed
 
-# instantiate environment in all processes
+# instantiate and precompile environment in all processes
 @everywhere begin
-  using Pkg; Pkg.activate(@__DIR__); Pkg.instantiate()
+  using Pkg; Pkg.activate(@__DIR__)
+  Pkg.instantiate(); Pkg.precompile()
 end
 
 @everywhere begin
   # load dependencies
+  using ProgressMeter
   using CSV
 
   # helper functions
@@ -96,20 +100,19 @@ end
 # -----------
 
 # relevant directories
-indir  = "data"
-outdir = "results"
+indir  = joinpath(@__DIR__,"data")
+outdir = joinpath(@__DIR__,"results")
 
 # files to process
 infiles  = readdir(indir, join=true)
 outfiles = joinpath.(outdir, basename.(infiles))
 nfiles   = length(infiles)
 
-status = pmap(1:nfiles) do i
+status = @showprogress pmap(1:nfiles) do i
   try
     process(infiles[i], outfiles[i])
     true # success
   catch e
-    @warn "failed to process $(infiles[i])"
     false # failure
   end
 end
@@ -118,32 +121,7 @@ end
 Now we can execute the script with multiple processes (e.g. 4):
 
 ```shell
-$ julia -p 4 --project=. main.jl
-```
-
-## IO issues
-
-Notice that we used "data" and "results" as our file paths in the script. If we try to run the script from outside the project directory (e.g. proj), we will get an error:
-
-```shell
-$ julia --project=proj proj/main.jl
-ERROR: LoadError: SystemError: unable to read directory data: No such file or directory
-```
-
-Even worse, these file paths may not exist on different machines when we request multiple remote workers. To solve this, we need to use paths relative to the `main.jl` source:
-
-```julia
-# relevant directories
-indir  = joinpath(@__DIR__,"data")
-outdir = joinpath(@__DIR__,"results")
-```
-
-or set these paths in the command line using some package like [DocOpt.jl](https://github.com/docopt/DocOpt.jl).
-
-Our previous command should work with the suggested modifications:
-
-```shell
-$ julia --project=proj proj/main.jl
+$ julia -p 4 main.jl
 ```
 
 ## Parallelization (remote machines)
@@ -158,7 +136,18 @@ Suppose we are in a cluster that uses the PBS job scheduler. We can write a PBS 
 #PBS -N test_julia
 #PBS -q debug
 
-julia --machinefile=$PBS_NODEFILE --project=. main.jl
+julia --machine-file=$PBS_NODEFILE main.jl
+```
+
+Alternatively, suppose we are in a cluster that uses the LSF job scheduler:
+
+```shell
+#!/bin/bash
+#BSUB -n 20
+#BSUB -J test_julia
+#BSUB -q debug
+
+julia --machine-file=$LSB_DJOB_HOSTFILE main.jl
 ```
 
 # Contributors

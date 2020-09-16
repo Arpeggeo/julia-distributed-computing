@@ -1,12 +1,14 @@
 using Distributed
 
-# instantiate environment in all processes
+# instantiate and precompile environment
 @everywhere begin
-  using Pkg; Pkg.activate(@__DIR__); Pkg.instantiate()
+  using Pkg; Pkg.activate(@__DIR__)
+  Pkg.instantiate(); Pkg.precompile()
 end
 
 # load dependencies and helper functions
 @everywhere begin
+  using ProgressMeter
   using CSV
 
   function process(infile, outfile)
@@ -34,12 +36,19 @@ infiles  = readdir(indir, join=true)
 outfiles = joinpath.(outdir, basename.(infiles))
 nfiles   = length(infiles)
 
-status = pmap(1:nfiles) do i
+# process files in parallel
+status = @showprogress pmap(1:nfiles) do i
   try
     process(infiles[i], outfiles[i])
     true # success
   catch e
-    @warn "failed to process $(infiles[i])"
     false # failure
   end
+end
+
+# report files that failed
+failed = infiles[.!status]
+if !isempty(failed)
+  println("List of files that failed:")
+  foreach(println, failed)
 end
