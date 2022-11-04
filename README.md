@@ -149,7 +149,3 @@ Alternatively, suppose we are in a cluster that uses the LSF job scheduler:
 
 julia --machine-file=$LSB_DJOB_HOSTFILE main.jl
 ```
-
-# Contributors
-
-@juliohm @samuel_okon @pfitzseb
