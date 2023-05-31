@@ -16,11 +16,12 @@ Pkg.instantiate(); Pkg.precompile()
 # load dependencies
 using ProgressMeter
 using CSV
+using DataFrames
 
 # helper functions
 function process(infile, outfile)
   # read file from disk
-  csv = CSV.read(infile)
+  csv = CSV.read(infile, DataFrame)
 
   # perform calculations
   sleep(60) # pretend it takes time
@@ -81,11 +82,12 @@ end
   # load dependencies
   using ProgressMeter
   using CSV
+  using DataFrames
 
   # helper functions
   function process(infile, outfile)
     # read file from disk
-    csv = CSV.read(infile)
+    csv = CSV.read(infile, DataFrame)
 
     # perform calculations
     sleep(60) # pretend it takes time

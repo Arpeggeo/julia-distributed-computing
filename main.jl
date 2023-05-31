@@ -8,12 +8,13 @@ end
 
 # load dependencies and helper functions
 @everywhere begin
-  using ProgressMeter
-  using CSV
+using ProgressMeter
+using CSV
+using DataFrames
 
   function process(infile, outfile)
     # read file from disk
-    csv = CSV.read(infile)
+    csv = CSV.read(infile, DataFrame)
 
     # perform calculations
     sleep(60) # pretend it takes time
