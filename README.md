@@ -87,8 +87,7 @@ end
     csv = CSV.read(infile)
 
     # perform calculations
-    sleep(60) # pretend it takes time
-    csv.new = rand(size(csv,1))
+    sleep(60)
 
     # save new file to disk
     CSV.write(outfile, csv)
