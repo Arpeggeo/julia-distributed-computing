@@ -84,7 +84,7 @@ end
   # helper functions
   function process(infile, outfile)
     # read file from disk
-    csv = CSV.read(infile)
+    csv = CSV.File(infile)
 
     # perform calculations
     sleep(60)
