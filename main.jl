@@ -13,11 +13,10 @@ end
 
   function process(infile, outfile)
     # read file from disk
-    csv = CSV.read(infile)
+    csv = CSV.File(infile)
 
     # perform calculations
-    sleep(60) # pretend it takes time
-    csv.new = rand(size(csv,1))
+    sleep(60)
 
     # save new file to disk
     CSV.write(outfile, csv)
