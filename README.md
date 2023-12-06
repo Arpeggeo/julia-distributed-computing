@@ -147,3 +147,15 @@ Alternatively, suppose we are in a cluster that uses the LSF job scheduler:
 
 julia --machine-file=$LSB_DJOB_HOSTFILE main.jl
 ```
+
+Alternatively, suppose we are in a cluster that uses the Slurm job scheduler:
+
+```shell
+#!/bin/bash
+#SBATCH --job-name=test_julia
+#SBATCH --ntasks=20
+
+export SLURM_NODEFILE=`generate_pbs_nodefile`
+
+julia --machine-file=$SLURM_NODEFILE main.jl
+```
