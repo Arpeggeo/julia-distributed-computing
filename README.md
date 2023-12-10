@@ -48,11 +48,11 @@ end
 
 We follow Julia’s best practices:
 
-1. We instantiate the environment in the host machine, which lives in the files Project.toml and Manifest.toml (the same directory of the script). Additionally, we precompile the project in case of heavy dependencies.
+1. We instantiate the environment in the host machine, which lives in the files `Project.toml` and `Manifest.toml` (the same directory of the script). Additionally, we precompile the project in case of heavy dependencies.
 2. We then load the dependencies of the project, and define helper functions to be used.
 3. The main work is done in a loop that calls the helper function with various files.
 
-Let’s call this script `main.jl`. We can cd into the project directory and call the script as follows:
+Let’s call this script `main.jl`. We can `cd` into the project directory and call the script as follows:
 
 ```shell
 $ julia main.jl
@@ -62,8 +62,9 @@ $ julia main.jl
 
 Our goal is to process the files in parallel. First, we will make minor modifications to the script to be able to run it with multiple processes on the same machine (e.g. the login node). This step is important for debugging:
 
-- We load the Distributed stdlib to replace the simple for loop by a pmap call. It seems that Distributed is always available so we don’t need to instantiate the environment before loading it. That will be important because we will instantiate the other dependencies in all workers with a @everywhere block call that is already available without any previous instantiation.
-- We wrap the preamble into *two* @everywhere begin ... end blocks, and replace the for loop by a pmap call. We also add a `try ... catch` block to handle issues with specific files. Two separate blocks are needed so that the environment is properly instantiated in all processes before we start loading packages.
+- We load the `Distributed` stdlib to replace the simple `for` loop by a `pmap` call. `Distributed` is always available so we don’t need to instantiate the environment before loading it.
+- We wrap the preamble into *two* `@everywhere` blocks. Two separate blocks are needed so that the environment is properly instantiated in all processes before we start loading packages.
+- We also add a `try-catch` to handle issues with specific files handled by different parallel processes.
 
 Here is the resulting script after the modifications:
 
@@ -76,6 +77,7 @@ using Distributed
   Pkg.instantiate(); Pkg.precompile()
 end
 
+# load dependencies in a *separate* @everywhere block
 @everywhere begin
   # load dependencies
   using ProgressMeter
@@ -124,7 +126,7 @@ $ julia -p 4 main.jl
 
 ## Parallelization (remote machines)
 
-Finally, we would like to run the script above in a cluster with hundreds of remote worker processes. We don’t know in advance how many processes will be available because this is the job of a job scheduler (e.g. SLURM, PBS). We have the option of using [ClusterManagers.jl](https://github.com/JuliaParallel/ClusterManagers.jl) and the option to call the julia executable from a job script directly.
+Finally, we would like to run the script above in a cluster with hundreds of remote worker processes. We don’t know in advance how many processes will be available because this is the job of a job scheduler (e.g. Slurm, PBS). We have the option of using [ClusterManagers.jl](https://github.com/JuliaParallel/ClusterManagers.jl) and the option to call the julia executable from a job script directly.
 
 Suppose we are in a cluster that uses the PBS job scheduler. We can write a PBS script that calls Julia and tells it where the hosts are using the `--machine-file` option:
 
