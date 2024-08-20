@@ -4,6 +4,8 @@ In this repository we collect relevant information for people interested in dist
 
 We plan to update this document every now and then to reflect the latest (and cleanest) way of performing distributed computing with remote workers in Julia. If you read Julia forums, you will find many related threads where people shared solutions for specific problems, which are currently outdated. This is a central thread of discussion to solve most issues once and for all.
 
+**Important note:** This guide focuses on Distributed.jl, Julia's standard library for distributed computing. MPI.jl, the established programming language-independent industry standard for distributed computing, is not covered here. If you want stability and want to work on a larger scale, you should consider MPI. Note, however, that unlike Distributed.jl, you lose (almost) all interactivity with MPI.
+
 ## Sample script
 
 We will consider a sample script that processes a set of files in a data folder and saves the results in a results folder. We did choose this task because it involves IO and file paths, which can get tricky in remote machines:
